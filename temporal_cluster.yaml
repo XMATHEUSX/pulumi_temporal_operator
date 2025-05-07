@@ -1,0 +1,48 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cassandra-password
+  namespace: demo
+type: Opaque
+data:
+  PASSWORD: Y2Fzc2FuZHJh
+---
+apiVersion: temporal.io/v1beta1
+kind: TemporalCluster
+metadata:
+  name: local
+  namespace: demo
+spec:
+  version: 1.24.3
+  numHistoryShards: 1
+  jobTtlSecondsAfterFinished: 300
+  persistence:
+    defaultStore:
+      cassandra:
+        hosts:
+          - "cassandra.demo"
+        port: 9042
+        user: cassandra
+        keyspace: temporal
+        datacenter: datacenter1
+        disableInitialHostLookup: false
+      passwordSecretRef:
+        name: cassandra-password
+        key: PASSWORD
+    visibilityStore:
+      elasticsearch:
+        version: v8
+        username: elastic
+        url: http://elasticsearch-es-http:9200
+      passwordSecretRef:
+        name: elasticsearch-es-elastic-user
+        key: elastic
+  ui:
+    enabled: true
+  admintools:
+    enabled: true
+  metrics:
+    enabled: true
+    prometheus:
+      listenPort: 9090
+
